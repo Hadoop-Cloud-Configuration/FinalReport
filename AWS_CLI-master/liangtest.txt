@@ -1,0 +1,14 @@
+#Server Node: new server 
+docker run -d --dns 127.0.0.1 -P --entrypoint /usr/local/serf/bin/start-serf-agent.sh -e KEYCHAIN= --name amb0 -h amb0.mycorp.kom newsequence:1  --tag ambari-server=true 
+
+##Client Node
+
+docker run -d -e SERF_JOIN_IP=54.208.22.28 -P --dns 127.0.0.1 --entrypoint /usr/local/serf/bin/start-serf-agent.sh -e KEYCHAIN= --name amb3 -h amb3.mycorp.kom sequenceiq/ambari:1.7.0 --log-level debug
+
+
+#Server Node: old server
+
+docker run -d --dns 127.0.0.1  -p 7373:7373 -p 7946:7946 -p 8080:8080 --entrypoint /usr/local/serf/bin/start-serf-agent.sh -e KEYCHAIN= --name amb0 -h amb0.mycorp.kom sequenceiq/ambari:1.7.0 --tag ambari-server=true
+
+#Client Node: old server
+docker run -d -e SERF_JOIN_IP=54.208.22.28 -P --dns 127.0.0.1 -p 7373:7373 -p 7946:7946 -p 8080:8080 --entrypoint /usr/local/serf/bin/start-serf-agent.sh -e KEYCHAIN= --name amb3 -h amb3.mycorp.kom sequenceiq/ambari:1.7.0 --log-level debug
