@@ -1,8 +1,0 @@
-fig4.1 Monitoring system structure
-4.2 Ambari Monitoring Widgets Overview
-4.3 Amazon Monitoring Metrics Overview
-4.4 Kibana Dashboard Overview
-4.5 Kibana Visualization Alternatives
-table 4.1 HDFS Monitor Metrics Sample
-table 4.2 YARN Monitor Metrics Sample
-

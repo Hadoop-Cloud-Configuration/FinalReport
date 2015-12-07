@@ -1,5 +1,0 @@
-
-command
-enter server/client: docker exec -it 79f bash
-exit:  exit
-
