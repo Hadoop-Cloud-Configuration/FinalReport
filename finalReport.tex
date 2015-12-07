@@ -200,41 +200,24 @@ Cluster Memory & {0 Bytes used/0 Bytes reserved/512.0 MB available}\\
  \end{figure}
  \subsection{Conclusion}
  We believe the above three kinds of monitoring process will provide with sufficient data to build our scaling model according to different kinds of datasets and jobs. Therefore, less efforts will be spent on this section, we will be focusing more on scale part such as figuring the data set which can be used and how to make the scale actually works.
-
-
-\section{Scale out Hadoop YARN Cluster}
-For scaling out the YARN cluster, we divide this problem into three important sub problems.
-
-The first problem is why we need to scale out. We expect scaling out could improve the performance. But some MapReduce jobs only process relatively small input data sets(several GBs), sometimes they are not suitable for scaling out. For other certain MapReduce jobs, we will figure out why these jobs need scale out the cluster based on our following experiments. Since AWS charges for the usage of EC2, we should control the cluster at a reasonable size for the trade-off between cost and performance. We need to find a method to calculate the cost and design experiment to test performance.
-
-The second problem is when we should scale out the cluster. For this problem, we should add slave nodes in the cluster as the data set becomes larger,  and figure out how many slave nodes we should need adjust. In order to solve this problem, we will run different data sets and monitor the Hadoop Cluster, AWS EC2 performance and other related information. Then, based on these information, we will create our data model and give the results of when to deploy and how many data nodes should be adjusted.
-
-The third problem is how we scale out the Hadoop Cluster. For this part, our current solution is to develop a scale-out server listening to the running cluster. When an adjustment event was fired, the server should be able to respond by add new hosts to the cluster or remove old hosts from the cluster.
-
-
-\subsection{Experiment Design}
- The basic assumption here is that data intensive jobs are suitable for scaling out. The second assumption is that scaling out is necessary when the job exceeds a certain threshold of  YARN memory usage. These two assumptions are made from experience. So we will do experiments on different jobs and use result metrics to validate our assumptions. Our choices about experiment jobs, metris and clusters are described as following.\\
-\textbf{Jobs}: Computing intensive jobs(like Pi estimate example) versus data intensive jobs(like word count example, tera sort example, log processing example)\\
-\textbf{Metrics}: performance, performance per node,  performance per dollar: derive performance per dollar by dividing raw performance by the capital/acquisition cost of the hardware, CPU usage, YARN memory usage, I/O operation, network overhead. The metrics are already described  monitoring subsection.\\
-\textbf{Clusters}: The initial cluster starts from 6 nodes. Each instance type is t2.micro equipped with 1G RAM and single CPU. Then scale out to 9 ,12 nodes of the cluster. (We are also  looking forward to get AWS credits to try scale-up instance which has larger RAM and multi-CPU)
-
-Firstly, we did the experiment of Pi estimate example on cluster of 6 and 9 nodes, the cpu and memory usage is shown in \textbf{figure 8}. We found that the cpu and memory usage is small. And it is not a good test case to scale out. In the next step, we will do experiments on more example jobs and compare more metrics.
-\begin{figure}[h!]
- \centering
-  \includegraphics[width=0.4\textwidth,natwidth=500,natheight=400]{figureScale.png}
- \caption{Scaling System Workflow}
- \end{figure}
-
-\subsection{ Auto Scale out Hadoop YARN Cluster}
+ 
+\section{ Auto Scale out Hadoop YARN Cluster}
 We consider the cluster used in above experiment is static because the hardware resources are already given when the job is running. We manually modify the cluster size to compare the performance of running jobs. It leads to a question naturally about how to make the cluster itself decide add or remove on the fly. Thus the cluster¡¯s throughput can be increased or decreased based on the cluster load and scheduled applications to achieve better performance without stopping the cluster.	
 
-The key point here is to solve when to make an adjustment. Since we observed that the performance did vary when cluster size changed, the cluster adjustment should based on the real-time performance metrics. These metrics could be collected and queried by via elasticsearch. The YARN allocate resource based on memory, a simple schema is to ensure a stable memory usage of the cluster. This means when a memory usage exceed a maximum value, the cluster choose to add node or to remove when a low memory usage. The schema might make little difference to a single running job, but it is meaningful when multiple jobs submitted to the cluster. The process includes complicated balance of both hdfs data and YARN resource when cluster changed. We are still actively working on it. If the stable memory policy works, we can also apply similar policy like stable performance or stable cost to the auto-scale schema.
+The key point here is to solve when to make an adjustment. Since we observed that the performance did vary when cluster size changed, the cluster adjustment should based on the real-time performance metrics. These metrics could be collected and queried by via elastic-search. The YARN allocate resource based on memory, a simple schema is to ensure a stable memory usage of the cluster. This means when a memory usage exceed a maximum value, the cluster choose to add node or to remove when a low memory usage. The schema might make little difference to a single running job, but it is meaningful when multiple jobs submitted to the cluster. The process includes complicated balance of both HDFS data and YARN resource when cluster changed. We are still actively working on it. If the stable memory policy works, we can also apply similar policy like stable performance or stable cost to the auto-scale schema.
+\subsection{A small detour}
+We first implemented our own monitor system. The system in written design and Java, which utilized the Ambari API and did a sliding average to check on memory and disk information. When abnormality is detected, it will trigger a scaling event and our handler will take over to perform a scale. However, later on when we kept digging the Ambari API, we found out that its server provided a service called \textbf{alert}, which would throw out an alert when some conditions were met. Therefore, instead of implementing our own monitor system for every module we care about, we could only implement a monitor on its alert system and monitor if there exists an alive alert on that module and the status of the alert.
+\subsection{Ambari Alert}
 
- \begin{figure}[h!]
- \centering
-  \includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{scaling2.png}
- \caption{Scaling Process}
- \end{figure}
+\subsection{Alert-based Scaling System(AbSS)}
+After understanding the Ambari alert system, we put forwarded the following system, an Alert-based Scaling System, as shown in \textbf{Figure 8}. In order to use our service, you will need to first add alert definitions to our system and then work out a policy with us on how you would like your cluster to be scaled when that alert is triggered. After that, you should register your AWS instances to our persistent database, instance pool in Figure 8, so that we could use them during the scaling up/down process.\\
+Our service will check with Ambari server every 10 seconds to see if there is a new alert triggered which is registered with our service. If a specific alert is detected and it meets the requirement set in our policy, our system will publish a scaling event, either marked us downscale or upscale and the nodes to be deleted/added to our scaling events pool. The event handler will then go ahead to handle all the event handler. The producer-consumer model enables asynchronism, which breaks the dependency between the producer and the consumer, which can add a lot of performance improvement in our system, shown in \textbf{Figure 9}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{scaling2.png}
+\caption{Scaling Process}
+\end{figure}
  
 \begin{figure}[h!]
  \centering
@@ -243,22 +226,65 @@ The key point here is to solve when to make an adjustment. Since we observed tha
  \end{figure}
  
 
+\subsection{UI Guideline}
+We also developed a Graphic User Interface for this system to simplify the procedure for user to add policy to our system. With UI, it would be even quicker for a user to use with our system to deploy an auto-scaling Hadoop cluster. 
+\begin{enumerate}
+  \item Register Cluster with \textbf{AbSS}(shown in Figure )\\
+  During register, you will need to provide us with Ambari Information and credentials of your cluster, such as username, password, url and port information.
+  \item Add instances to the Cluster(shown in Figure )\\
+  By adding instances to our cluster, you will need to install the Apache Ambari client and input the private DNS name of your instance.
+  \item Define scaling policy(shown in Figure )
+  \begin{itemize}
+  \item Choose an alert to monitor and based on that to trigger the scaling
+  \item Choose the time to monitor that alert
+  \item Choose the alert trigger status(OK, WARNING, CRITICAL)
+  \item Choose scale type(Scale up/ Scale down)
+  \end{itemize}
+\end{enumerate}
+\subsection{Scaling System Design}
+
+\section{Case Study}
+We did two case studies to testify our scaling design and implementation. The first one is auto scaling out the cluster when there is no enough Yarn memory. The second one is to auto scaling out the cluster when there is no pending jobs and no Yarn memory usage. 
+
+
+The basic assumption here is that data intensive jobs are suitable for scaling out. The second assumption is that scaling out is necessary when the job exceeds a certain threshold of  YARN memory usage. These two assumptions are made from experience. Our choices about experiment jobs, metrics and clusters are described as following.\\
+\textbf{Jobs}: Computing intensive jobs(like Pi estimate example) versus data intensive jobs(like word count example, tera-sort example, log processing example)\\
+\textbf{Metrics}: performance, performance per node,  performance per dollar: derive performance per dollar by dividing raw performance by the capital/acquisition cost of the hardware, CPU usage, YARN memory usage, I/O operation, network overhead. The metrics are already described  monitoring subsection.\\
+\textbf{Clusters}: The initial cluster starts from 6 nodes. Each instance type is t2.micro equipped with 1G RAM and single CPU. Then scale out to 9 ,12 nodes of the cluster.
+
+For scaling out the YARN cluster, we divide this problem into three important sub problems.
+The first problem is why we need to scale out. We expect scaling out could improve the performance of the cluster and make efficient use of resources. Since AWS charges for the usage of EC2, we should control the cluster at a reasonable size for the trade-off between cost and performance. We need to find a method to calculate the cost and design experiment to test performance.The second problem is when we should scale out the cluster. For this problem, we should add slave nodes in the cluster as the data set becomes larger, and figure out how many slave nodes we should need adjust. In order to solve this problem, we will run different data sets and monitor the Hadoop Cluster, AWS EC2 performance and other related information. Then, based on these information, we will create our data model and give the results of when to deploy and how many data nodes should be adjusted.The third problem is how we scale out the Hadoop Cluster. For this part, our current solution is to develop a scale-out server listening to the running cluster. When an adjustment event was fired, the server should be able to respond by add new nodes to the cluster or remove nodes from the cluster.
  
-\subsection{Case studies}
-In the last, we run Hadoop pi example to testify our auto scaling implementation.. The initial state of our cluster is one name node and three data nodes.  The scaling out demo  is to calculate pi based on quasi-Monte Carlo method. The number of maps is set to be 100. And the number of points to be generated is set to  ten million. If we set the alert to be 60\% of memory usage. And the usage of Yarn memory will reach 85\% after several minutes. And it will trigger the alert,  Our system gets the alert and executes the scaling out policy, that means adding 2 data nodes in this case. In practice, you can set both the alert and policy, like defining how long it takes to trigger the alert.
+For auto scaling out case, the initial state of our cluster is one name node and three data nodes. The job is to calculate pi based on quasi-Monte Carlo method. The number of maps is set to be 100. And the number of points to be generated is set to  ten million. The scaling policy is that when Yarn memory usage exceeds 60\% for one minute, it will trigger the system to add two nodes in the cluster. In practice, several minutes after the job started, the usage of Yarn memory will reach 85\%. Then it would trigger the alert,  Our system gets the alert and executes the scaling out policy, that means adding 2 data nodes in this case. In practice, you can set both the alert and policy, like defining how long it takes to trigger the alert.
  \begin{figure}[h!]
  \centering
   \includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{scaling3.png}
  \caption{Scaling Out case}
  \end{figure}
- The scaling down demo is to remove data nodes from the cluster when there is no pending jobs.
+ 
+For auto scaling down case study, the cluster had 12 data nodes at first, as shown in figure 12.  The scaling policy is to remove two data nodes from the cluster when there is no pending jobs and no memory usage for one minute. Then, the cluster is downscaled to the minimum size after several minutes.
 \begin{figure}[h!]
  \centering
   \includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{scaling4.png}
  \caption{Scaling Down Case}
  \end{figure}
+ 
+\section{Scale out Hadoop YARN Cluster}
+
+
+
+\subsection{Experiment Design}
+
+
+
+
+
+ 
+\subsection{Case studies}
+
+
 \section{Related Work}
-In deployment, we used Go programming language library for aws and consul, a tool for discovering and configuring services in our infrastructure. In monitoring, our application integrates Hadoop provisioning and monitoring capabilities with the Ambari(an open-source, cluster-management tool ) and ELK stack(combine three open source projects Elasticsearch, Logstash, and Kibana). For scaling, although Hadoop cluster is widely used nowadays, many researchers[3,4] challenge the viewpoint that scaling out using a cluster of commodity machines is better to run data analytic workloads. Rowstron[3] argues that single big memory servers may simply be more efficient than clusters, which can substantially change price points and complexity.  Appuswamy[4] evaluates scaling up versus scaling out across a range of analytic workloads and using four metrics: performance, cost, energy, and server density. In the last part of our project, we want to do similar studies in scaling out. It is interesting and useful to conduct research in determining when and how to scale out the cluster.
+In deployment, we used Go programming language library for AWS and consul, a tool for discovering and configuring services in our infrastructure. In monitoring, our application integrates Hadoop provisioning and monitoring capabilities with the Ambari(an open-source, cluster-management tool ) and ELK stack(combine three open source projects Elasticsearch, Logstash, and Kibana). For scaling, although Hadoop cluster is widely used nowadays, many researchers[3,4] challenge the viewpoint that scaling out using a cluster of commodity machines is better to run data analytic workloads. Rowstron[3] argues that single big memory servers may simply be more efficient than clusters, which can substantially change price points and complexity.  Appuswamy[4] evaluates scaling up versus scaling out across a range of analytic workloads and using four metrics: performance, cost, energy, and server density. In the last part of our project, we want to do similar studies in scaling out. It is interesting and useful to conduct research in determining when and how to scale out the cluster.
 
 
 \section{Conclusion}
