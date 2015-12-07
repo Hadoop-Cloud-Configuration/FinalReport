@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  6 DEC 2015 17:58
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  6 DEC 2015 22:50
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -382,22 +382,44 @@ Package pdftex.def Info: figureScale.png used on input line 224.
 Missing character: There is no ¡ in font cmr10!
 Missing character: There is no ¯ in font cmr10!
 
-[9 <./figureScale.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 254--255
+<scaling2.png, id=50, 627.34375pt x 265.99374pt>
+File: scaling2.png Graphic file (type png)
+ <use scaling2.png>
+Package pdftex.def Info: scaling2.png used on input line 235.
+(pdftex.def)             Requested size: 344.005pt x 145.86272pt.
+ [9 <./figureScale.png>] <scaling1.png, id=55, 626.34pt x 377.41pt>
+File: scaling1.png Graphic file (type png)
+ <use scaling1.png>
+Package pdftex.def Info: scaling1.png used on input line 241.
+(pdftex.def)             Requested size: 344.005pt x 207.2882pt.
+
+<scaling3.png, id=56, 450.68375pt x 274.02374pt>
+File: scaling3.png Graphic file (type png)
+ <use scaling3.png>
+Package pdftex.def Info: scaling3.png used on input line 251.
+(pdftex.def)             Requested size: 344.005pt x 209.17172pt.
+
+<scaling4.png, id=57, 463.7325pt x 239.89626pt>
+File: scaling4.png Graphic file (type png)
+ <use scaling4.png>
+Package pdftex.def Info: scaling4.png used on input line 257.
+(pdftex.def)             Requested size: 344.005pt x 177.96336pt.
+ [10 <./scaling2.png> <./scaling1.png>] [11 <./scaling3.png> <./scaling4.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 278--279
 []\OT1/cmr/m/n/10 http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference
 /ec2-cli-launch-
  []
 
-[10] (./intermediateReport.aux)
+[12] (./intermediateReport.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 2476 strings out of 493089
- 35669 string characters out of 6134842
+ 2496 strings out of 493089
+ 35985 string characters out of 6134842
  109153 words of memory out of 5000000
- 5932 multiletter control sequences out of 15000+600000
+ 5948 multiletter control sequences out of 15000+600000
  8242 words of font info for 29 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  42i,8n,23p,1109b,233s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -407,10 +429,10 @@ Here is how much of TeX's memory you used:
 usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></us
 r/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/
 local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on intermediateReport.pdf (10 pages, 663636 bytes).
+Output written on intermediateReport.pdf (12 pages, 813506 bytes).
 PDF statistics:
- 78 PDF objects out of 1000 (max. 8388607)
- 43 compressed objects within 1 object stream
+ 88 PDF objects out of 1000 (max. 8388607)
+ 47 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 41 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 61 words of extra memory for PDF output out of 10000 (max. 10000000)
 
