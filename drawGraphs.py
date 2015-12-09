@@ -21,20 +21,13 @@ oldfile='no_scaling_pi.csv'
 i=0
 with open(oldfile, 'r') as infile:
     for line in infile:
- #       xn.append(i)
- #       i=i+1
         data=line.split(',')
-#        y1.append(int(data[0]))
-#        y2.append(int(data[1]))
         arr.append(stat(int(data[0]), int(data[1]), int(data[2])) )
 
 arr.sort(key=lambda x: x.startTime)
 
 
-
 for currentdata in arr:
-    i=i+1
- 
     y1.append(currentdata.startTime/1000)
     y2.append(currentdata.endTime/1000)
     
@@ -48,17 +41,15 @@ duration=(yemax-ysmin)/1000
 print duration
 for i in range(len(xn)):
     x = [y1[i]-ysmin,y2[i]-ysmin]
-    y = [xn[i],xn[i]]
-    #print x
-    #print y
+    y = [y1[i]-ysmin,y1[i]-ysmin]
     plt.plot(x,y)
 
 
-plt.xlabel('Duration(s)',fontsize=20)
+plt.xlabel('Time(s)',fontsize=20)
 plt.ylabel('Start Time(s)',fontsize=20)  
 plt.title('Run Pi Example without scaling',fontsize=20)
-#plt.xlim(0,20)
-#plt.ylim(0,20)
+plt.xlim(0,700)
+plt.ylim(0,700)
 plt.show()
 
 '''

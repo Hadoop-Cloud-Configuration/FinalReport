@@ -374,6 +374,43 @@ For the case study of auto scaling down, the cluster had 12 data nodes at first,
  \label{fig:autoscalingdown}
  \end{figure}
  
+ \section{Comparison}
+ \subsection{Comparison in two clusters}
+In order to compare the performance of our auto-scaling solution, we have run the same job (yarn jar hadoop-mapreduce-examples-2.7.1.2.3.2.0-2950.jar pi 100 1000000000) on two clusters, one is auto scaling cluster, the other is no scaling cluster. In auto scaling cluster, job finished in 437.635 seconds, and the no scale cluster need 625.257 seconds to finish the same job. The performance has been improved by 31\%. 
+
+We get the information of containers from Hadoop metrics.
+The starting time and duration of containers in the cluster under scaling and no-scaling are shown in \textbf{Figure~\ref{fig:scaling_pi}} and \textbf{Figure~\ref{fig:no_scaling_pi}}. The starting time is shown in X-axis, the length of line represents the duration of each container. From those two graphs, we knew that Auto-Scaling will increase the performance by reducing the total running time. Furthermore, segments are more densely populated in the up right of \textbf{Figure~\ref{fig:scaling_pi}}, showing that the cluster has scaled out and assigned more containers at the same period of time as there are more resources added to the cluster, thus cutting the total running time of the job.
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[width=0.9\textwidth,natwidth=1000,natheight=800]{scaling_pi.png}
+ \caption{Pi Job with Auto-Scaling}
+ \label{fig:scaling_pi}
+ \end{figure}
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[width=0.9\textwidth,natwidth=1000,natheight=800]{no_scaling_pi.png}
+ \caption{Pi Job without Auto-Scaling}
+ \label{fig:no_scaling_pi}
+ \end{figure}
+
+\subsection{Running different jobs on auto scaling cluster}
+We have run two different jobs on the same auto scaling cluster. The first job is (yarn jar hadoop-mapreduce-examples-2.7.1.2.3.2.0-2950.jar pi 100 10000000), and the second job is (yarn jar hadoop-mapreduce-examples-2.7.1.2.3.2.0-2950.jar pi 100 1000000000). Then we monitor the memory and CPU usage of two jobs from cluster, and the results are shown in \textbf{Figure~\ref{fig:memoryUtilization}} and \textbf{Figure~\ref{fig:cpuUtilization}}
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{memoryUtilization.png}
+ \caption{Memory Utilization}
+ \label{fig:memoryUtilization}
+ \end{figure}
+ 
+ \begin{figure}[ht!]
+ \centering
+ \includegraphics[width=0.8\textwidth,natwidth=1000,natheight=800]{cpuUtilization.png}
+ \caption{CPU Utilization}
+ \label{fig:cpuUtilization}
+ \end{figure}
+ 
+From \textbf{Figure~\ref{fig:memoryUtilization}}. We can see the duration time of memory usage of two jobs. The first bar's duration time is smaller than the second one because the first job is smaller than the second one. In the first bar, when the memory usage is approximately 100\%, our application will start the scale out process. After adding new instances into the cluster, the total memory of the cluster will increase, so the memory usage of the cluster will decrease. If there are more available memory, the Resource Manager will allocate free resources to pending jobs. After allocating, the total memory usage will increase too. When all jobs are finished, the memory usage will decrease to zero.
+ 
 \section{Related Work}
 In deployment, we used Go programming language library for AWS and consul, a tool for discovering and configuring services in our infrastructure. In monitoring, our application integrates Hadoop provisioning and monitoring capabilities with the Ambari(an open-source, cluster-management tool ) and ELK stack(combine three open source projects Elasticsearch, Logstash, and Kibana). For scaling, although Hadoop cluster is widely used nowadays, many researchers[3,4] challenge the viewpoint that scaling out using a cluster of commodity machines is better to run data analytic workloads. Rowstron[3] argues that single big memory servers may simply be more efficient than clusters, which can substantially change price points and complexity.  Appuswamy[4] evaluates scaling up versus scaling out across a range of analytic workloads and using four metrics: performance, cost, energy, and server density. In the last part of our project, we want to do similar studies in scaling out. It is interesting and useful to conduct research in determining when and how to scale out the cluster.
 
